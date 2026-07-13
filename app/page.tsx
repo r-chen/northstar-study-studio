@@ -43,9 +43,14 @@ const task = (title: string, note: string, taskResource?: Task["resource"]): Tas
 });
 
 const resources = {
-  math78: resource("Lesson", "Waterloo CEMC Grade 7/8 Mathematics Courseware", "https://cemc.uwaterloo.ca/resources/courseware/grade-7-8-mathematics"),
-  math911: resource("Lesson", "Waterloo CEMC Grade 9/10/11 Mathematics Courseware", "https://cemc.uwaterloo.ca/resources/courseware/grade-9-10-11-mathematics"),
-  mathDiscovery: resource("Practice", "CEMC Problem Solving and Mathematical Discovery", "https://cemc.uwaterloo.ca/resources/courseware/problem-solving-and-mathematical-discovery"),
+  mathCheckin: resource("Practice", "2025 Gauss Grade 8 Contest", "https://cemc.uwaterloo.ca/sites/default/files/documents/2025/2025Gauss8Contest.html"),
+  mathPercentages: resource("Lesson", "CEMC Lesson 3: Percentages", "https://courseware.cemc.uwaterloo.ca/27/75/assignments/585/0"),
+  mathEquations: resource("Lesson", "CEMC Lesson 10: Solving Two-Step Equations", "https://courseware.cemc.uwaterloo.ca/27/assignments/733/0"),
+  mathLinear: resource("Lesson", "CEMC Lesson 2: Linear Relationships", "https://courseware.cemc.uwaterloo.ca/27/76/assignments/590/0"),
+  mathGeometry: resource("Lesson", "CEMC Lesson 7: Volume and Capacity of a Cylinder", "https://courseware.cemc.uwaterloo.ca/27/95/assignments/896/0"),
+  mathData: resource("Lesson", "CEMC Lesson 1: Mean, Median, and Mode", "https://courseware.cemc.uwaterloo.ca/27/94/assignments/847/0"),
+  mathRichProblem: resource("Practice", "CEMC Problem D: Cheesecake Geometry", "https://cemc.uwaterloo.ca/sites/default/files/documents/2026/POTWD-25-G-N-18-P.pdf"),
+  mathSolutions: resource("Guide", "2025 Gauss Grade 8 Worked Solutions", "https://cemc.uwaterloo.ca/sites/default/files/documents/2025/2025GaussSolution.html"),
   scienceNotebook: resource("Guide", "Science Buddies: Laboratory Notebooks", "https://www.sciencebuddies.org/science-fair-projects/science-fair/laboratory-notebooks-stem"),
   scienceSafety: resource("Guide", "Science Buddies: Safety Guidelines", "https://www.sciencebuddies.org/science-fair-projects/references/safety-guidelines"),
   atom: resource("Interactive", "PhET: Build an Atom", "https://phet.colorado.edu/en/simulations/build-an-atom"),
@@ -103,7 +108,7 @@ const mergeStarterResources = (saved: PlannerData): PlannerData => {
         ...subject,
         tasks: subject.tasks.map((item) => {
           const defaultTask = defaultTasks.get(item.title);
-          return defaultTask?.resource ? { ...item, resource: defaultTask.resource } : item;
+          return defaultTask?.resource ? { ...item, note: defaultTask.note, resource: defaultTask.resource } : item;
         }),
       };
     }),
@@ -121,14 +126,14 @@ const starterData = (): PlannerData => ({
       weight: 22,
       purpose: "Build confident Grade 9 foundations and learn to explain why an answer works.",
       tasks: [
-        task("Take a no-pressure Grade 8 math check-in", "Open the courseware, sample 12–15 questions across four units, and mark each topic green, yellow, or red. Do not chase a score.", resources.math78),
-        task("Refresh fractions, ratios, and percentages", "Complete one lesson from Ratios, Rates, and Proportions, then write one real-life example for each idea.", resources.math78),
-        task("Algebra: simplify and solve", "Complete one Equations lesson. Check every answer by substituting it back into the original equation.", resources.math78),
-        task("Explore linear relations", "Use the Relations material to make a table, graph, and equation for one pattern. Describe slope in plain language.", resources.math911),
-        task("Geometry and measurement review", "Choose one geometry lesson and complete its practice on area, volume, Pythagorean theorem, or unit conversions.", resources.math78),
-        task("Data and probability mini-lab", "Choose a data lesson, then use a small real dataset to calculate, graph, and write one honest conclusion.", resources.math78),
-        task("Solve one rich problem two ways", "Choose one discovery problem. Show two approaches, circle the key insight, and compare which method is clearer.", resources.mathDiscovery),
-        task("Create a one-page math field guide", "Use the courseware headings to make a one-page guide to the five ideas you most want handy in September.", resources.math911),
+        task("Take a no-pressure Grade 8 math check-in", "Open the 2025 Gauss Grade 8 contest and answer Questions 1–15 without timing yourself. Mark each question green, yellow, or red; do not chase a score.", resources.mathCheckin),
+        task("Refresh fractions, ratios, and percentages", "Complete CEMC’s Percentages lesson through the practice section, then write one real-life example connecting a fraction, decimal, and percent.", resources.mathPercentages),
+        task("Algebra: simplify and solve", "Complete the Two-Step Equations lesson and its checks. Verify at least three answers by substituting them into the original equations.", resources.mathEquations),
+        task("Explore linear relations", "Complete the Linear Relationships lesson. For one example, copy its table, graph, and equation and describe the relationship in plain language.", resources.mathLinear),
+        task("Geometry and measurement review", "Complete the Volume and Capacity of a Cylinder lesson, including at least three exercises. Draw and label the formula before using it.", resources.mathGeometry),
+        task("Data and probability mini-lab", "Complete the Mean, Median, and Mode lesson, then calculate all three measures for a small dataset from daily life and write one conclusion.", resources.mathData),
+        task("Solve one rich problem two ways", "Solve Cheesecake Geometry without opening a solution. Show two approaches or representations, circle the key insight, and compare which is clearer.", resources.mathRichProblem),
+        task("Create a one-page math field guide", "Review worked solutions for the Gauss questions you attempted. Build a one-page guide with five useful ideas, one diagram, and one mistake to avoid.", resources.mathSolutions),
       ],
     },
     {
