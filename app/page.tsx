@@ -27,11 +27,13 @@ type Subject = {
 };
 
 type PlannerData = {
+  schemaVersion?: number;
   subjects: Subject[];
   blockMinutes: 30 | 45;
 };
 
 const STORAGE_KEY = "northstar-study-studio-v3";
+const CURRENT_SCHEMA_VERSION = 4;
 const uid = () => Math.random().toString(36).slice(2, 10);
 const resource = (kind: NonNullable<Task["resource"]>["kind"], label: string, url: string) => ({ kind, label, url });
 const task = (title: string, note: string, taskResource?: Task["resource"]): Task => ({
@@ -75,6 +77,16 @@ const resources = {
   pythonScratch: resource("Video", "Waterloo CEMC: Python from Scratch", "https://open.cs.uwaterloo.ca/python-from-scratch/"),
   pythonDebug: resource("Lesson", "CS Circles 6D: Design, Debugging and Donuts", "https://cscircles.cemc.uwaterloo.ca/6d-design/"),
   pythonCheatSheet: resource("Guide", "CS Circles Python Cheatsheet", "https://cscircles.cemc.uwaterloo.ca/wp-content/plugins/pybox/files/cheatsheet.pdf"),
+  vexStart: resource("Guide", "VEX: Start, Download, and Run a V5 C++ Project", "https://kb.vex.com/hc/en-us/articles/360051666332-Starting-Downloading-and-Running-a-VEXcode-V5-C-Project"),
+  vexCppIntro: resource("Lesson", "VEX V5: Introduction to C++ Programming", "https://education.vex.com/stemlabs/v5/stem-labs/momentum-alley/introduction-to-c-programming"),
+  vexMotors: resource("Guide", "VEX V5 C++ API: Motors and Motor Groups", "https://api.vex.com/v5/home/cpp/Motors_and_MotorControllers/motor_and_motor_group.html"),
+  vexDrivetrain: resource("Guide", "VEX V5 C++ API: Drivetrain", "https://api.vex.com/v5/home/cpp/Drivetrain/index.html"),
+  vexLoops: resource("Lesson", "VEX V5: Programming Loops in C++", "https://education.vex.com/stemlabs/v5/stem-labs/loop-there-it-is/programming-loops-c"),
+  vexConditionals: resource("Lesson", "VEX V5: Programming with Conditionals in C++", "https://education.vex.com/stemlabs/v5/stem-labs/to-do-or-not-to-do/programming-with-conditionals-c"),
+  vexController: resource("Lesson", "VEX V5: Controllers and Loops in C++", "https://education.vex.com/stemlabs/v5/stem-labs/loop-there-it-is/controllers-and-loops-c"),
+  vexSensorDebug: resource("Guide", "VEX: Troubleshooting V5 Sensors", "https://kb.vex.com/hc/en-us/articles/14661626721172-Troubleshooting-VEX-V5-Sensors"),
+  vexCompetition: resource("Guide", "VEX V5 C++ API: Competition Structure", "https://api.vex.com/v5/home/cpp/Competition.html"),
+  vexInertial: resource("Guide", "VEX V5 C++ API: Inertial Sensor", "https://api.vex.com/v5/home/cpp/Smart_Port_Devices/Inertial_Sensor.html"),
   sketchbook: resource("Book", "Tate: Your Sketchbook, Your Self", "https://shop.tate.org.uk/your-sketchbook-your-self/10358.html"),
   drawing: resource("Lesson", "National Gallery of Art: Drawing Everyday Objects", "https://www.nga.gov/educational-resources/lesson-drawing-everyday-objects"),
   constraint: resource("Guide", "MoMA: Make Art with Three Colours", "https://www.moma.org/momaorg/shared/pdfs/docs/learn/Make-Art-With-MoMA/2024_Make%20Art%20with%20MoMA-%20Amanda%20Williams.pdf"),
@@ -97,25 +109,33 @@ const resources = {
 const mergeStarterResources = (saved: PlannerData): PlannerData => {
   const defaults = starterData();
   const defaultSubjects = new Map(defaults.subjects.map((subject) => [subject.id, subject]));
+  const mergedSubjects = saved.subjects.map((subject) => {
+    const defaultSubject = defaultSubjects.get(subject.id);
+    if (!defaultSubject) return subject;
+    const defaultTasks = new Map(defaultSubject.tasks.map((item) => [item.title, item]));
+    return {
+      ...subject,
+      tasks: subject.tasks.map((item) => {
+        const defaultTask = defaultTasks.get(item.title);
+        return defaultTask?.resource ? { ...item, note: defaultTask.note, resource: defaultTask.resource } : item;
+      }),
+    };
+  });
+
+  if ((saved.schemaVersion ?? 3) < CURRENT_SCHEMA_VERSION && !mergedSubjects.some((subject) => subject.id === "vex")) {
+    const vexSubject = defaultSubjects.get("vex");
+    if (vexSubject) mergedSubjects.splice(4, 0, vexSubject);
+  }
 
   return {
     ...saved,
-    subjects: saved.subjects.map((subject) => {
-      const defaultSubject = defaultSubjects.get(subject.id);
-      if (!defaultSubject) return subject;
-      const defaultTasks = new Map(defaultSubject.tasks.map((item) => [item.title, item]));
-      return {
-        ...subject,
-        tasks: subject.tasks.map((item) => {
-          const defaultTask = defaultTasks.get(item.title);
-          return defaultTask?.resource ? { ...item, note: defaultTask.note, resource: defaultTask.resource } : item;
-        }),
-      };
-    }),
+    schemaVersion: CURRENT_SCHEMA_VERSION,
+    subjects: mergedSubjects,
   };
 };
 
 const starterData = (): PlannerData => ({
+  schemaVersion: CURRENT_SCHEMA_VERSION,
   blockMinutes: 45,
   subjects: [
     {
@@ -188,6 +208,26 @@ const starterData = (): PlannerData => ({
         task("Design a tiny useful tool", "Watch one Python from Scratch module, then sketch inputs, outputs, and three features for a calculator, study helper, or story generator.", resources.pythonScratch),
         task("Build and debug the first version", "Use the debugging lesson while building in small steps. Record three bugs, their symptoms, and the fixes.", resources.pythonDebug),
         task("Publish a project reflection", "Use the cheatsheet to tidy the code, then write a reflection with a screenshot, purpose, hardest part, and one next improvement.", resources.pythonCheatSheet),
+      ],
+    },
+    {
+      id: "vex",
+      name: "VEX Robotics Programming",
+      shortName: "VEX",
+      color: "#d14b45",
+      weight: 18,
+      purpose: "Prepare to contribute reliable C++ code on a VEX V5 team—starting with the team’s existing toolchain, then moving from mechanisms to match-ready autonomous routines.",
+      tasks: [
+        task("Confirm the team toolchain and run its code", "Ask the mentor or current programmer whether the team uses VEXcode V5, the VEX VS Code extension, PROS, or another established setup. Open a copy of the current project, identify the entry point, build it, and run it only with team permission.", resources.vexStart),
+        task("Read a VEX C++ program without guessing", "Work through the introduction and annotate one short program: device, command, parameters, braces, semicolons, comments, and main(). Write a five-line C++ vocabulary card.", resources.vexCppIntro),
+        task("Control one mechanism safely", "Study motor and motor-group commands. In a team-approved test project, run one intake, arm, or other mechanism slowly; set velocity, spin, stop, and record the correct port and reversed direction.", resources.vexMotors),
+        task("Program repeatable drivetrain movement", "Review driveFor and turnFor, then make a simple path with two drives and two turns. Measure the real result and record the error rather than tuning by eye alone.", resources.vexDrivetrain),
+        task("Use loops to remove repeated code", "Complete the loop exploration, then replace at least three repeated robot commands with a repeat or while loop. Predict the behaviour before running it.", resources.vexLoops),
+        task("Make the robot respond to conditions", "Complete the conditionals exploration. Write one if/else behaviour using a button or sensor value and explain what must be true for each branch to run.", resources.vexConditionals),
+        task("Improve driver-control code", "Study the tank-drive example, then trace how joystick values reach the motors. With the driver, test one small improvement such as deadband, speed modes, or clearer button mapping.", resources.vexController),
+        task("Build a sensor telemetry screen", "Use the troubleshooting pattern to print one sensor value repeatedly on the Brain screen. Record expected range, actual range, update interval, and one diagnostic conclusion.", resources.vexSensorDebug),
+        task("Understand the competition program structure", "Identify pre-match setup, autonomous, and driver-control sections in the team project. Draw a simple call-flow diagram and explain which function runs during each match phase.", resources.vexCompetition),
+        task("Build and test one autonomous routine", "Create a small routine with a clear finish line, such as drive–turn–score or drive–turn–return. Use inertial heading where the robot supports it; run five trials and log success, error, battery state, and the next change.", resources.vexInertial),
       ],
     },
     {
