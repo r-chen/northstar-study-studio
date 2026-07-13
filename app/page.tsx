@@ -33,7 +33,7 @@ type PlannerData = {
 };
 
 const STORAGE_KEY = "northstar-study-studio-v3";
-const CURRENT_SCHEMA_VERSION = 4;
+const CURRENT_SCHEMA_VERSION = 5;
 const uid = () => Math.random().toString(36).slice(2, 10);
 const resource = (kind: NonNullable<Task["resource"]>["kind"], label: string, url: string) => ({ kind, label, url });
 const task = (title: string, note: string, taskResource?: Task["resource"]): Task => ({
@@ -122,16 +122,40 @@ const mergeStarterResources = (saved: PlannerData): PlannerData => {
     };
   });
 
-  if ((saved.schemaVersion ?? 3) < CURRENT_SCHEMA_VERSION && !mergedSubjects.some((subject) => subject.id === "vex")) {
+  if ((saved.schemaVersion ?? 3) < 4 && !mergedSubjects.some((subject) => subject.id === "vex")) {
     const vexSubject = defaultSubjects.get("vex");
     if (vexSubject) mergedSubjects.splice(4, 0, vexSubject);
   }
 
+  const subjects = (saved.schemaVersion ?? 3) < 5
+    ? normalizeSubjectWeights(mergedSubjects)
+    : mergedSubjects;
+
   return {
     ...saved,
     schemaVersion: CURRENT_SCHEMA_VERSION,
-    subjects: mergedSubjects,
+    subjects,
   };
+};
+
+const normalizeSubjectWeights = (subjects: Subject[]): Subject[] => {
+  if (!subjects.length || subjects.length > 100) return subjects;
+
+  const positiveWeights = subjects.map((subject) => Math.max(subject.weight, 1));
+  const total = positiveWeights.reduce((sum, weight) => sum + weight, 0);
+  const distributable = 100 - subjects.length;
+  const exactShares = positiveWeights.map((weight) => (weight / total) * distributable);
+  const shares = exactShares.map(Math.floor);
+  const assigned = shares.reduce((sum, weight) => sum + weight, 0);
+  const remainderOrder = exactShares
+    .map((share, index) => ({ index, remainder: share - shares[index] }))
+    .sort((a, b) => b.remainder - a.remainder);
+
+  for (let index = 0; index < distributable - assigned; index += 1) {
+    shares[remainderOrder[index].index] += 1;
+  }
+
+  return subjects.map((subject, index) => ({ ...subject, weight: shares[index] + 1 }));
 };
 
 const starterData = (): PlannerData => ({
@@ -143,7 +167,7 @@ const starterData = (): PlannerData => ({
       name: "Math Foundations",
       shortName: "Math",
       color: "#e96b4c",
-      weight: 22,
+      weight: 18,
       purpose: "Build confident Grade 9 foundations and learn to explain why an answer works.",
       tasks: [
         task("Take a no-pressure Grade 8 math check-in", "Open the 2025 Gauss Grade 8 contest and answer Questions 1–15 without timing yourself. Mark each question green, yellow, or red; do not chase a score.", resources.mathCheckin),
@@ -161,7 +185,7 @@ const starterData = (): PlannerData => ({
       name: "Science Explorer",
       shortName: "Science",
       color: "#4c8f80",
-      weight: 20,
+      weight: 16,
       purpose: "Prepare for Grade 9 science while testing which STEM questions feel exciting.",
       tasks: [
         task("Set up a science notebook", "Follow the notebook guide and create sections for questions, evidence, vocabulary, diagrams, and reflections.", resources.scienceNotebook),
@@ -179,7 +203,7 @@ const starterData = (): PlannerData => ({
       name: "Reading & Writing",
       shortName: "English",
       color: "#7a67a8",
-      weight: 10,
+      weight: 9,
       purpose: "Strengthen the reading, argument, and storytelling skills used in every high-school subject.",
       tasks: [
         task("Choose one summer anchor book", "Preview The Marrow Thieves and decide whether it sparks interest. If yes, read for one full block; if not, choose another age-appropriate book.", resources.marrowThieves),
@@ -197,7 +221,7 @@ const starterData = (): PlannerData => ({
       name: "Coding & Making",
       shortName: "Coding",
       color: "#3c78a8",
-      weight: 18,
+      weight: 13,
       purpose: "Turn STEM ability and creative interests into small, finishable projects.",
       tasks: [
         task("Set up a project journal", "Open CS Circles and create a journal page with five headings: goal, plan, code tried, bugs, and next step.", resources.csCircles),
@@ -218,16 +242,16 @@ const starterData = (): PlannerData => ({
       weight: 18,
       purpose: "Prepare to contribute reliable C++ code on a VEX V5 team—starting with the team’s existing toolchain, then moving from mechanisms to match-ready autonomous routines.",
       tasks: [
-        task("Confirm the team toolchain and run its code", "Ask the mentor or current programmer whether the team uses VEXcode V5, the VEX VS Code extension, PROS, or another established setup. Open a copy of the current project, identify the entry point, build it, and run it only with team permission.", resources.vexStart),
-        task("Read a VEX C++ program without guessing", "Work through the introduction and annotate one short program: device, command, parameters, braces, semicolons, comments, and main(). Write a five-line C++ vocabulary card.", resources.vexCppIntro),
-        task("Control one mechanism safely", "Study motor and motor-group commands. In a team-approved test project, run one intake, arm, or other mechanism slowly; set velocity, spin, stop, and record the correct port and reversed direction.", resources.vexMotors),
-        task("Program repeatable drivetrain movement", "Review driveFor and turnFor, then make a simple path with two drives and two turns. Measure the real result and record the error rather than tuning by eye alone.", resources.vexDrivetrain),
-        task("Use loops to remove repeated code", "Complete the loop exploration, then replace at least three repeated robot commands with a repeat or while loop. Predict the behaviour before running it.", resources.vexLoops),
-        task("Make the robot respond to conditions", "Complete the conditionals exploration. Write one if/else behaviour using a button or sensor value and explain what must be true for each branch to run.", resources.vexConditionals),
-        task("Improve driver-control code", "Study the tank-drive example, then trace how joystick values reach the motors. With the driver, test one small improvement such as deadband, speed modes, or clearer button mapping.", resources.vexController),
-        task("Build a sensor telemetry screen", "Use the troubleshooting pattern to print one sensor value repeatedly on the Brain screen. Record expected range, actual range, update interval, and one diagnostic conclusion.", resources.vexSensorDebug),
-        task("Understand the competition program structure", "Identify pre-match setup, autonomous, and driver-control sections in the team project. Draw a simple call-flow diagram and explain which function runs during each match phase.", resources.vexCompetition),
-        task("Build and test one autonomous routine", "Create a small routine with a clear finish line, such as drive–turn–score or drive–turn–return. Use inertial heading where the robot supports it; run five trials and log success, error, battery state, and the next change.", resources.vexInertial),
+        task("Confirm the team toolchain and run its code", "Use one block for orientation only: ask which toolchain and project file the team uses, write down the answers, open a copy of the project, and find main(). If it builds within the block, great; do not edit team code yet.", resources.vexStart),
+        task("Read a VEX C++ program without guessing", "Read only the introduction and annotate 12–20 lines from one short example: circle a device, command, parameter, brace pair, semicolon, comment, and main(). Finish with a five-item vocabulary card.", resources.vexCppIntro),
+        task("Control one mechanism safely", "With mentor approval and the robot safely supported, test one motor or motor group only: set 20% velocity, spin for at most two seconds, stop, and record its port and reversed setting. Stop after one successful test.", resources.vexMotors),
+        task("Program repeatable drivetrain movement", "Choose one movement—not a full path. Program either a 300 mm drive or a 90° turn, run three trials, measure the error, and record one possible cause. Save tuning for another block.", resources.vexDrivetrain),
+        task("Use loops to remove repeated code", "Read the first loop example, type one repeat loop that performs two safe actions three times, and predict the result before one test. Skip the extension challenge today.", resources.vexLoops),
+        task("Make the robot respond to conditions", "Read the first conditional example and write one small if/else using a button or sensor. Test each branch once and write the condition in plain English. Stop when both branches work.", resources.vexConditionals),
+        task("Improve driver-control code", "Trace one joystick axis or button from controller input to motor output. Make at most one team-approved change—such as a deadband or clearer button mapping—and run no more than three short tests.", resources.vexController),
+        task("Build a sensor telemetry screen", "Print one sensor value only to the Brain screen. Collect ten readings in two known positions, note the expected and actual ranges, and write one diagnostic conclusion.", resources.vexSensorDebug),
+        task("Understand the competition program structure", "Do not build match code yet. Find and label pre-match setup, autonomous, and driver-control callbacks in a copy of the team project; draw a three-box call-flow and explain it to a teammate.", resources.vexCompetition),
+        task("Build and test one autonomous routine", "Build the smallest useful autonomous segment: one drive plus one turn, at reduced speed. Run three trials, log endpoint error and battery state, then name exactly one change for the next block.", resources.vexInertial),
       ],
     },
     {
@@ -253,7 +277,7 @@ const starterData = (): PlannerData => ({
       name: "Organization & Leadership",
       shortName: "Lead",
       color: "#b85f7b",
-      weight: 22,
+      weight: 18,
       purpose: "Build a dependable personal system now, research public school resources, and save activity choices for September.",
       tasks: [
         task("Build one trusted capture system", "Read the capture section, choose one place for every commitment, and enter five sample assignments with due dates and next actions.", resources.capture),
@@ -332,6 +356,7 @@ export default function Home() {
   const doneCount = allTasks.filter((item) => item.done).length;
   const today = new Date().toISOString().slice(0, 10);
   const todayCount = allTasks.filter((item) => item.completedAt?.startsWith(today)).length;
+  const totalWeight = data.subjects.reduce((sum, subject) => sum + Math.max(subject.weight, 1), 0);
 
   const wheelBackground = useMemo(() => {
     const total = data.subjects.reduce((sum, subject) => sum + Math.max(subject.weight, 1), 0);
@@ -658,6 +683,11 @@ export default function Home() {
               <button className="close" onClick={() => setEditing(false)} aria-label="Close customization">×</button>
             </div>
             <p className="modal-help">Names, colours, weights, tasks, and progress save only in this browser. Higher weights create larger wheel slices. Avoid entering a real name, school, address, contact details, or other sensitive information.</p>
+            <div className={`weight-total ${totalWeight === 100 ? "balanced" : "needs-adjustment"}`} role="status">
+              <span>Wheel total</span>
+              <strong>{totalWeight}</strong>
+              <small>{totalWeight === 100 ? "Balanced at 100" : "Adjust weights to total 100"}</small>
+            </div>
             <div className="subject-settings">
               {data.subjects.map((subject) => (
                 <div className="setting-row" key={subject.id}>
