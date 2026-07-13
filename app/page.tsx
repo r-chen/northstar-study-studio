@@ -600,7 +600,7 @@ export default function Home() {
                       <span className="task-number">{String(index + 1).padStart(2, "0")}</span>
                       <strong className="task-title">{item.title}</strong>
                     </div>
-                    <p className="task-action"><span>Do</span>{item.note}</p>
+                    <p className="task-action"><span>Do</span><span>{item.note}</span></p>
                     {item.resource && (
                       <a className="task-resource" href={item.resource.url} target="_blank" rel="noreferrer">
                         <span className="resource-kind">{item.resource.kind}</span>
