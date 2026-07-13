@@ -7,6 +7,11 @@ type Task = {
   id: string;
   title: string;
   note: string;
+  resource?: {
+    kind: "Book" | "Guide" | "Interactive" | "Lesson" | "Practice" | "Video";
+    label: string;
+    url: string;
+  };
   done: boolean;
   completedAt?: string;
 };
@@ -28,12 +33,82 @@ type PlannerData = {
 
 const STORAGE_KEY = "northstar-study-studio-v3";
 const uid = () => Math.random().toString(36).slice(2, 10);
-const task = (title: string, note: string): Task => ({
+const resource = (kind: NonNullable<Task["resource"]>["kind"], label: string, url: string) => ({ kind, label, url });
+const task = (title: string, note: string, taskResource?: Task["resource"]): Task => ({
   id: uid(),
   title,
   note,
+  resource: taskResource,
   done: false,
 });
+
+const resources = {
+  math78: resource("Lesson", "Waterloo CEMC Grade 7/8 Mathematics Courseware", "https://cemc.uwaterloo.ca/resources/courseware/grade-7-8-mathematics"),
+  math911: resource("Lesson", "Waterloo CEMC Grade 9/10/11 Mathematics Courseware", "https://cemc.uwaterloo.ca/resources/courseware/grade-9-10-11-mathematics"),
+  mathDiscovery: resource("Practice", "CEMC Problem Solving and Mathematical Discovery", "https://cemc.uwaterloo.ca/resources/courseware/problem-solving-and-mathematical-discovery"),
+  scienceNotebook: resource("Guide", "Science Buddies: Laboratory Notebooks", "https://www.sciencebuddies.org/science-fair-projects/science-fair/laboratory-notebooks-stem"),
+  scienceSafety: resource("Guide", "Science Buddies: Safety Guidelines", "https://www.sciencebuddies.org/science-fair-projects/references/safety-guidelines"),
+  atom: resource("Interactive", "PhET: Build an Atom", "https://phet.colorado.edu/en/simulations/build-an-atom"),
+  circuit: resource("Interactive", "PhET: Circuit Construction Kit — DC", "https://phet.colorado.edu/en/simulations/circuit-construction-kit-dc"),
+  ecosystem: resource("Video", "Khan Academy: Ecology Introduction", "https://www.khanacademy.org/science/biology/ecology/intro-to-ecology/v/ecology-introduction"),
+  climate: resource("Guide", "NASA: Evidence for Climate Change", "https://science.nasa.gov/climate-change/evidence/"),
+  fairTest: resource("Guide", "Science Buddies: Doing a Fair Test", "https://www.sciencebuddies.org/science-fair-projects/science-fair/doing-a-fair-test-variables-for-beginners"),
+  experiment: resource("Guide", "Science Buddies: Conducting an Experiment", "https://www.sciencebuddies.org/science-fair-projects/science-fair/conducting-an-experiment"),
+  marrowThieves: resource("Book", "The Marrow Thieves — Cherie Dimaline", "https://www.cormorantbooks.com/Books/T/The-Marrow-Thieves"),
+  criticalReading: resource("Guide", "U of T: Critical Reading Towards Critical Writing", "https://advice.writing.utoronto.ca/researching/critical-reading/"),
+  summary: resource("Guide", "Purdue OWL: Quoting, Paraphrasing, and Summarizing", "https://owl.purdue.edu/owl/research_and_citation/using_research/quoting_paraphrasing_and_summarizing/index.html"),
+  paragraphs: resource("Guide", "U of T: Paragraphs", "https://advice.writing.utoronto.ca/planning/paragraphs/"),
+  creativeWriting: resource("Guide", "Purdue OWL: Creative Writing", "https://owl.purdue.edu/owl/subject_specific_writing/creative_writing/index.html"),
+  revising: resource("Guide", "U of T: Revising and Editing", "https://advice.writing.utoronto.ca/revising/revising-and-editing/"),
+  bookTalk: resource("Guide", "Scholastic: Student Booktalk Tips", "https://www.scholastic.com/content/dam/teachers/blogs/alycia-zimmerman/migrated-files/161501_bktlk_student_tips.pdf.pdf"),
+  dictionary: resource("Guide", "Merriam-Webster Student Dictionary", "https://www.merriam-webster.com/kids"),
+  csCircles: resource("Lesson", "Waterloo CS Circles: Start Here", "https://cscircles.cemc.uwaterloo.ca/"),
+  pythonVariables: resource("Lesson", "CS Circles 1: Variables", "https://cscircles.cemc.uwaterloo.ca/1-variables/"),
+  pythonLoops: resource("Lesson", "CS Circles 7C: Loops", "https://cscircles.cemc.uwaterloo.ca/7c-loops/"),
+  pythonFunctions: resource("Lesson", "CS Circles 11B: How Functions Work", "https://cscircles.cemc.uwaterloo.ca/11b-how-functions-work/"),
+  pythonLists: resource("Lesson", "CS Circles 13: Lists", "https://cscircles.cemc.uwaterloo.ca/13-lists/"),
+  pythonScratch: resource("Video", "Waterloo CEMC: Python from Scratch", "https://open.cs.uwaterloo.ca/python-from-scratch/"),
+  pythonDebug: resource("Lesson", "CS Circles 6D: Design, Debugging and Donuts", "https://cscircles.cemc.uwaterloo.ca/6d-design/"),
+  pythonCheatSheet: resource("Guide", "CS Circles Python Cheatsheet", "https://cscircles.cemc.uwaterloo.ca/wp-content/plugins/pybox/files/cheatsheet.pdf"),
+  sketchbook: resource("Book", "Tate: Your Sketchbook, Your Self", "https://shop.tate.org.uk/your-sketchbook-your-self/10358.html"),
+  drawing: resource("Lesson", "National Gallery of Art: Drawing Everyday Objects", "https://www.nga.gov/educational-resources/lesson-drawing-everyday-objects"),
+  constraint: resource("Guide", "MoMA: Make Art with Three Colours", "https://www.moma.org/momaorg/shared/pdfs/docs/learn/Make-Art-With-MoMA/2024_Make%20Art%20with%20MoMA-%20Amanda%20Williams.pdf"),
+  artProcess: resource("Lesson", "National Gallery of Art: Process and Product — Drawing", "https://www.nga.gov/educational-resources/process-and-product/process-and-product-drawing"),
+  artistStatement: resource("Guide", "RISD: Artist Statement", "https://careercenter.risd.edu/artist-statement"),
+  fluteSlow: resource("Guide", "The Flute Practice: Slow It Down, Break It Down", "https://theflutepractice.com/blog/slow-it-down-break-it-down/"),
+  fluteRecord: resource("Guide", "PracticeFlute: Practice Tips", "https://www.practiceflute.com/blog.html"),
+  portfolio: resource("Guide", "National Gallery of Art: Process and Product", "https://www.nga.gov/educational-resources/process-and-product"),
+  capture: resource("Guide", "Todoist: Getting Things Done", "https://www.todoist.com/productivity-methods/getting-things-done"),
+  drive: resource("Guide", "Google Drive Help: Organize Your Files", "https://support.google.com/drive/answer/2375091"),
+  schoolResearch: resource("Guide", "Ontario: Getting Ready for High School", "https://www.ontario.ca/page/getting-ready-high-school"),
+  weeklyReview: resource("Guide", "Todoist: The Weekly Review", "https://www.todoist.com/productivity-methods/weekly-review"),
+  askForHelp: resource("Guide", "Kids Help Phone: How to Ask for Help", "https://kidshelpphone.ca/get-info/how-to-ask-for-help/"),
+  email: resource("Guide", "Purdue OWL: Email Etiquette", "https://owl.purdue.edu/owl/general_writing/academic_writing/email_etiquette.html"),
+  activities: resource("Guide", "Ontario: Volunteering in Ontario", "https://www.ontario.ca/page/volunteering-ontario"),
+  projectCycle: resource("Guide", "Middlebury: The Project Cycle", "https://www.middlebury.edu/projects-for-peace/summer-grants/project-cycle"),
+  reflection: resource("Guide", "Providence College: Student Reflection Toolkit", "https://engaged-learning.providence.edu/engaged-learning/reflective-practice/student-toolkit/"),
+} satisfies Record<string, NonNullable<Task["resource"]>>;
+
+const mergeStarterResources = (saved: PlannerData): PlannerData => {
+  const defaults = starterData();
+  const defaultSubjects = new Map(defaults.subjects.map((subject) => [subject.id, subject]));
+
+  return {
+    ...saved,
+    subjects: saved.subjects.map((subject) => {
+      const defaultSubject = defaultSubjects.get(subject.id);
+      if (!defaultSubject) return subject;
+      const defaultTasks = new Map(defaultSubject.tasks.map((item) => [item.title, item]));
+      return {
+        ...subject,
+        tasks: subject.tasks.map((item) => {
+          const defaultTask = defaultTasks.get(item.title);
+          return defaultTask?.resource ? { ...item, resource: defaultTask.resource } : item;
+        }),
+      };
+    }),
+  };
+};
 
 const starterData = (): PlannerData => ({
   blockMinutes: 45,
@@ -46,14 +121,14 @@ const starterData = (): PlannerData => ({
       weight: 22,
       purpose: "Build confident Grade 9 foundations and learn to explain why an answer works.",
       tasks: [
-        task("Take a no-pressure Grade 8 math check-in", "Try 12–15 mixed questions. Mark topics as green, yellow, or red; do not chase a score."),
-        task("Refresh fractions, ratios, and percentages", "Solve a short mixed set, then write one real-life example for each idea."),
-        task("Algebra: simplify and solve", "Practise distributive property and one- and two-step equations. Check every answer by substitution."),
-        task("Explore linear relations", "Make a table, graph, and equation for the same pattern. Describe slope in plain language."),
-        task("Geometry and measurement review", "Work with area, volume, Pythagorean theorem, and unit conversions."),
-        task("Data and probability mini-lab", "Use a small real dataset; find centre and spread, then make one honest graph."),
-        task("Solve one rich problem two ways", "Choose a Waterloo CEMC-style problem. Show two approaches and compare them."),
-        task("Create a one-page math field guide", "Record the five ideas you most want available on the first week of school."),
+        task("Take a no-pressure Grade 8 math check-in", "Open the courseware, sample 12–15 questions across four units, and mark each topic green, yellow, or red. Do not chase a score.", resources.math78),
+        task("Refresh fractions, ratios, and percentages", "Complete one lesson from Ratios, Rates, and Proportions, then write one real-life example for each idea.", resources.math78),
+        task("Algebra: simplify and solve", "Complete one Equations lesson. Check every answer by substituting it back into the original equation.", resources.math78),
+        task("Explore linear relations", "Use the Relations material to make a table, graph, and equation for one pattern. Describe slope in plain language.", resources.math911),
+        task("Geometry and measurement review", "Choose one geometry lesson and complete its practice on area, volume, Pythagorean theorem, or unit conversions.", resources.math78),
+        task("Data and probability mini-lab", "Choose a data lesson, then use a small real dataset to calculate, graph, and write one honest conclusion.", resources.math78),
+        task("Solve one rich problem two ways", "Choose one discovery problem. Show two approaches, circle the key insight, and compare which method is clearer.", resources.mathDiscovery),
+        task("Create a one-page math field guide", "Use the courseware headings to make a one-page guide to the five ideas you most want handy in September.", resources.math911),
       ],
     },
     {
@@ -64,14 +139,14 @@ const starterData = (): PlannerData => ({
       weight: 20,
       purpose: "Prepare for Grade 9 science while testing which STEM questions feel exciting.",
       tasks: [
-        task("Set up a science notebook", "Create sections for questions, evidence, vocabulary, diagrams, and reflections."),
-        task("Review lab safety and measurement", "Learn common symbols, SI units, significant observations, and how to write a fair test."),
-        task("Chemistry preview: atoms and elements", "Build a visual explanation of atoms, ions, elements, and compounds."),
-        task("Physics preview: electricity", "Sketch series and parallel circuits and explain current, voltage, and resistance."),
-        task("Biology preview: ecosystems", "Make a local food web and predict what happens when one population changes."),
-        task("Earth science: climate evidence", "Read one reputable explainer and separate observations, models, and conclusions."),
-        task("Run a safe mini-investigation", "Ask a testable question using household materials; record method, data, and limitations."),
-        task("Make a two-minute science explainer", "Teach one concept with a hand-drawn diagram and clear, accurate language."),
+        task("Set up a science notebook", "Follow the notebook guide and create sections for questions, evidence, vocabulary, diagrams, and reflections.", resources.scienceNotebook),
+        task("Review lab safety and measurement", "Read the safety guide and make a 10-item checklist covering hazards, protective steps, SI units, and observations.", resources.scienceSafety),
+        task("Chemistry preview: atoms and elements", "Complete the first two levels of the simulation, then draw and label an atom, ion, element, and compound.", resources.atom),
+        task("Physics preview: electricity", "Build one series and one parallel circuit in the simulation. Sketch both and explain current, voltage, and resistance.", resources.circuit),
+        task("Biology preview: ecosystems", "Watch the ecology introduction, make a local food web, and predict what happens when one population changes.", resources.ecosystem),
+        task("Earth science: climate evidence", "Read NASA’s evidence page and make two columns: direct observations and conclusions supported by them.", resources.climate),
+        task("Run a safe mini-investigation", "Use the fair-test guide to plan one household-material investigation; identify one variable to change and three to control.", resources.fairTest),
+        task("Make a two-minute science explainer", "Use the experiment guide as a structure: question, method, evidence, conclusion, and limitation. Teach it with one hand-drawn diagram.", resources.experiment),
       ],
     },
     {
@@ -82,14 +157,14 @@ const starterData = (): PlannerData => ({
       weight: 10,
       purpose: "Strengthen the reading, argument, and storytelling skills used in every high-school subject.",
       tasks: [
-        task("Choose one summer anchor book", "Pick a novel or nonfiction book you genuinely want to finish; read for one full block."),
-        task("Practise active annotation", "Mark a page for questions, patterns, surprises, and one sentence worth discussing."),
-        task("Write a 150-word summary", "Capture the central idea without retelling every event. Revise for precision."),
-        task("Build a strong analytical paragraph", "Use a claim, specific evidence, explanation, and a closing connection."),
-        task("Draft a 500-word short story", "Start with a character who wants something and introduce a meaningful obstacle."),
-        task("Revise for voice and clarity", "Read the story aloud; improve five sentences and remove details that do not earn their place."),
-        task("Prepare a three-minute book talk", "Introduce the work, one big idea, and who might enjoy it—without reading a script."),
-        task("Start a personal word bank", "Collect 12 useful words from real reading and write an original sentence for each."),
+        task("Choose one summer anchor book", "Preview The Marrow Thieves and decide whether it sparks interest. If yes, read for one full block; if not, choose another age-appropriate book.", resources.marrowThieves),
+        task("Practise active annotation", "Read the practical tips, then mark two pages for questions, patterns, surprises, and one sentence worth discussing.", resources.criticalReading),
+        task("Write a 150-word summary", "Use the summary guide to capture only the central idea and key support. Revise until it is 130–170 words.", resources.summary),
+        task("Build a strong analytical paragraph", "Follow the paragraph guide: claim, specific evidence, explanation, and a closing connection.", resources.paragraphs),
+        task("Draft a 500-word short story", "Read one creative-writing topic, then draft a story about a character who wants something and meets a meaningful obstacle.", resources.creativeWriting),
+        task("Revise for voice and clarity", "Use the revision checklist, read the story aloud, improve five sentences, and remove two details that do not earn their place.", resources.revising),
+        task("Prepare a three-minute book talk", "Use the tips sheet to prepare an opening hook, one big idea, and an audience recommendation. Deliver it without reading a script.", resources.bookTalk),
+        task("Start a personal word bank", "Collect 12 useful words from real reading. Check each meaning and write one original sentence in the student dictionary.", resources.dictionary),
       ],
     },
     {
@@ -100,14 +175,14 @@ const starterData = (): PlannerData => ({
       weight: 18,
       purpose: "Turn STEM ability and creative interests into small, finishable projects.",
       tasks: [
-        task("Set up a project journal", "For each build, record the goal, plan, bugs, decisions, and what to try next."),
-        task("Python basics: values and input", "Use variables, numbers, strings, input, and formatted output in a tiny program."),
-        task("Python decisions and loops", "Build a number game or quiz using conditions and repetition."),
-        task("Functions: make code reusable", "Turn repeated logic into two named functions and test unusual inputs."),
-        task("Represent information with lists", "Make a reading, music, or game-data tracker that can add and summarize items."),
-        task("Design a tiny useful tool", "Plan a calculator, study helper, story generator, or game-related data tool."),
-        task("Build and debug the first version", "Work in small steps; write down three bugs and how they were found."),
-        task("Publish a project reflection", "Include a screenshot, what it does, the hardest part, and one next improvement."),
+        task("Set up a project journal", "Open CS Circles and create a journal page with five headings: goal, plan, code tried, bugs, and next step.", resources.csCircles),
+        task("Python basics: values and input", "Complete the Variables lesson and its exercises. Then change one example so it prints a personalized, non-private message.", resources.pythonVariables),
+        task("Python decisions and loops", "Complete the Loops lesson, then build a five-question quiz or number game using conditions and repetition.", resources.pythonLoops),
+        task("Functions: make code reusable", "Read how functions work, turn repeated logic into two named functions, and test one unusual input.", resources.pythonFunctions),
+        task("Represent information with lists", "Complete the Lists lesson, then make a reading, music, or game-data tracker that adds and summarizes items.", resources.pythonLists),
+        task("Design a tiny useful tool", "Watch one Python from Scratch module, then sketch inputs, outputs, and three features for a calculator, study helper, or story generator.", resources.pythonScratch),
+        task("Build and debug the first version", "Use the debugging lesson while building in small steps. Record three bugs, their symptoms, and the fixes.", resources.pythonDebug),
+        task("Publish a project reflection", "Use the cheatsheet to tidy the code, then write a reflection with a screenshot, purpose, hardest part, and one next improvement.", resources.pythonCheatSheet),
       ],
     },
     {
@@ -118,14 +193,14 @@ const starterData = (): PlannerData => ({
       weight: 8,
       purpose: "Keep art and music joyful while developing the habit of finishing and explaining creative work.",
       tasks: [
-        task("Begin a summer visual journal", "Fill one spread with sketches, colour notes, collage, or observations from the week."),
-        task("Observational drawing study", "Draw one ordinary object from three angles; focus on shape, value, and proportion."),
-        task("Create with a constraint", "Make a piece using only three colours, one material, or ten repeated shapes."),
-        task("Finish one small artwork or craft", "Choose a clear stopping point, photograph it well, and give it a title."),
-        task("Write a short artist statement", "In 100 words: intention, choices, challenge, and what changed during the work."),
-        task("Music: focused technique block", "Warm up, isolate four difficult measures, slow them down, then play in context."),
-        task("Music: record and listen", "Record one piece, name two strengths and one specific next step."),
-        task("Curate a mini portfolio", "Choose 3–5 works that show range and growth; add a short caption to each."),
+        task("Begin a summer visual journal", "Use the book preview for inspiration, then fill one spread with sketches, colour notes, collage, or observations from the week.", resources.sketchbook),
+        task("Observational drawing study", "Follow the everyday-objects lesson and draw one object from three angles, focusing on shape, value, and proportion.", resources.drawing),
+        task("Create with a constraint", "Use MoMA’s activity to make one piece with only three colours. Photograph the finished result.", resources.constraint),
+        task("Finish one small artwork or craft", "Use the process prompts to decide what ‘finished’ means, make the final changes, photograph it well, and give it a title.", resources.artProcess),
+        task("Write a short artist statement", "Use the RISD prompts to write 100 words covering intention, choices, challenge, and what changed during the work.", resources.artistStatement),
+        task("Music: focused technique block", "Use the slow-practice method: warm up, isolate four difficult measures, slow them down, then play them in context.", resources.fluteSlow),
+        task("Music: record and listen", "Follow one recording tip, record a complete take, and name two strengths plus one specific next step.", resources.fluteRecord),
+        task("Curate a mini portfolio", "Use the process-and-product examples to choose 3–5 works showing range and growth, then add a two-sentence caption to each.", resources.portfolio),
       ],
     },
     {
@@ -136,16 +211,16 @@ const starterData = (): PlannerData => ({
       weight: 22,
       purpose: "Build a dependable personal system now, research public school resources, and save activity choices for September.",
       tasks: [
-        task("Build one trusted capture system", "Choose one place for every deadline and commitment. Practise entering five sample assignments with due dates and next actions."),
-        task("Create the school command centre", "Set up matching paper and digital folders, a file-naming rule, and a home landing spot for the backpack and forms."),
-        task("Research the public student resources", "Find the school calendar, guidance, library, technology support, clubs or athletics page, and student handbook. Keep personal details out of notes."),
-        task("Design a 20-minute weekly reset", "Clear papers, check the calendar, review every course, choose priorities, and prepare the bag. Test the checklist once this summer."),
-        task("Practise asking for help early", "Write and role-play a respectful teacher conversation: what I tried, where I am stuck, and the specific help I need."),
-        task("Write a professional school email", "Use a useful subject line, greeting, concise context, clear question, thanks, and full name. Proofread before sending."),
-        task("Make a September activity shortlist", "Choose two broad categories to investigate—such as STEM, service, music, art, culture, or athletics. Wait for current school announcements before choosing a group."),
-        task("Build a contribution ladder", "For a future group, list four levels: attend, help, own a small task, then improve or lead a project. The first goal is simply to participate."),
-        task("Run a tiny leadership experiment", "Organize one family, friend, or community activity this summer. Set a goal, invite people, divide work, and follow up."),
-        task("Write a first-month reflection template", "Prepare five prompts: what energized me, what was hard, who helped, how I contributed, and what I will adjust."),
+        task("Build one trusted capture system", "Read the capture section, choose one place for every commitment, and enter five sample assignments with due dates and next actions.", resources.capture),
+        task("Create the school command centre", "Use the file-organization guide to set up matching paper and digital folders, a naming rule, and a home landing spot for forms.", resources.drive),
+        task("Research the public student resources", "Use the Ontario overview as a checklist, then find public calendar, guidance, library, technology, activity, and handbook pages. Save no personal details.", resources.schoolResearch),
+        task("Design a 20-minute weekly reset", "Adapt the weekly-review checklist: clear papers, check the calendar, review courses, choose priorities, and prepare the bag. Test it once.", resources.weeklyReview),
+        task("Practise asking for help early", "Read the help-seeking guide, then role-play: what I tried, where I am stuck, and the specific help I need.", resources.askForHelp),
+        task("Write a professional school email", "Use the etiquette guide to draft a useful subject line, greeting, concise context, clear question, thanks, and signature. Do not send it.", resources.email),
+        task("Make a September activity shortlist", "Browse the youth-opportunities categories and shortlist two areas—such as STEM, service, music, art, culture, or athletics—to investigate in September.", resources.activities),
+        task("Build a contribution ladder", "Use the project cycle to list four future levels: attend, help, own a small task, then improve or lead a project.", resources.projectCycle),
+        task("Run a tiny leadership experiment", "Use the project cycle to organize one family, friend, or community activity: define the goal, invite people, divide work, and follow up.", resources.projectCycle),
+        task("Write a first-month reflection template", "Use the reflection toolkit to prepare five prompts: what energized me, what was hard, who helped, how I contributed, and what I will adjust.", resources.reflection),
       ],
     },
   ],
@@ -177,7 +252,7 @@ export default function Home() {
       if (saved) {
         const parsed = JSON.parse(saved) as PlannerData;
         if (parsed.subjects?.length) {
-          setData(parsed);
+          setData(mergeStarterResources(parsed));
           setActiveId(parsed.subjects[0].id);
           setSecondsLeft(parsed.blockMinutes * 60);
         }
@@ -448,7 +523,17 @@ export default function Home() {
                   <button className="check" onClick={() => toggleTask(active.id, item.id)} aria-label={`${item.done ? "Mark incomplete" : "Mark complete"}: ${item.title}`}>
                     {item.done ? "✓" : index + 1}
                   </button>
-                  <div><strong>{item.title}</strong><p>{item.note}</p></div>
+                  <div className="task-content">
+                    <strong>{item.title}</strong>
+                    <p className="task-action"><span>Do</span>{item.note}</p>
+                    {item.resource && (
+                      <a className="task-resource" href={item.resource.url} target="_blank" rel="noreferrer">
+                        <span className="resource-kind">{item.resource.kind}</span>
+                        <span>{item.resource.label}</span>
+                        <span className="resource-open">Open ↗</span>
+                      </a>
+                    )}
+                  </div>
                 </li>
               ))}
             </ol>
