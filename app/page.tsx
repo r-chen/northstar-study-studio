@@ -522,23 +522,40 @@ export default function Home() {
               </div>
             </div>
             <p className="purpose">{active.purpose}</p>
+            <div className="lesson-guide" aria-label="How to complete a study block">
+              <div><span>1</span><p><strong>Open</strong>the resource</p></div>
+              <div><span>2</span><p><strong>Do</strong>the block task</p></div>
+              <div><span>3</span><p><strong>Mark done</strong>to save progress</p></div>
+            </div>
             <ol className="task-list">
               {active.tasks.map((item, index) => (
                 <li key={item.id} className={item.done ? "done" : ""}>
-                  <button className="check" onClick={() => toggleTask(active.id, item.id)} aria-label={`${item.done ? "Mark incomplete" : "Mark complete"}: ${item.title}`}>
-                    {item.done ? "✓" : index + 1}
-                  </button>
                   <div className="task-content">
-                    <strong>{item.title}</strong>
+                    <div className="task-heading">
+                      <span className="task-number">{String(index + 1).padStart(2, "0")}</span>
+                      <strong className="task-title">{item.title}</strong>
+                    </div>
                     <p className="task-action"><span>Do</span>{item.note}</p>
                     {item.resource && (
                       <a className="task-resource" href={item.resource.url} target="_blank" rel="noreferrer">
                         <span className="resource-kind">{item.resource.kind}</span>
                         <span>{item.resource.label}</span>
-                        <span className="resource-open">Open ↗</span>
+                        <span className="resource-open">Open resource ↗</span>
                       </a>
                     )}
                   </div>
+                  <button
+                    className="complete-button"
+                    onClick={() => toggleTask(active.id, item.id)}
+                    aria-pressed={item.done}
+                    aria-label={`${item.done ? "Mark incomplete" : "Mark done"}: ${item.title}`}
+                  >
+                    <span className="status-check" aria-hidden="true">{item.done ? "✓" : ""}</span>
+                    <span className="status-copy">
+                      <strong>{item.done ? "Completed" : "Mark done"}</strong>
+                      <small>{item.done ? "Click to undo" : "Save my progress"}</small>
+                    </span>
+                  </button>
                 </li>
               ))}
             </ol>
