@@ -655,8 +655,8 @@ export default function Home() {
               <div><span>3</span><p><strong>Leave a breadcrumb</strong>Write the very next step before stopping.</p></div>
             </div>
             <div className="screen-note">
-              <strong>Make play feel good again.</strong>
-              <p>Keep social apps out of focus blocks. After 3 solid blocks, online games with friends can be planned leisure—not something to feel guilty about.</p>
+              <strong>Balance focus time and game time.</strong>
+              <p>Keep social apps out of focus blocks. After 3 solid blocks, planned online time with friends can be a refreshing break without taking over the day.</p>
             </div>
           </aside>
         </div>
